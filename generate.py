@@ -61,28 +61,34 @@ def fetch_birthdays():
 
 def generate_birthday_this_year(birth_date: datetime, reference: datetime) -> datetime:
     """Generate the birthday date this year or next if it's already passed."""
-    try:
-        birthday_this_year = birth_date.replace(year=reference.year)
-    except ValueError:
-        birthday_this_year = birth_date.replace(year=reference.year, day=28)  # Feb 29 fix
-
-    if birthday_this_year < reference:
+    def get_birthday_for_year(year: int) -> datetime:
+        """Get birthday for a specific year, handling leap year edge cases."""
         try:
-            return birth_date.replace(year=reference.year + 1)
+            return birth_date.replace(year=year)
         except ValueError:
-            return birth_date.replace(year=reference.year + 1, day=28)
+            # This happens when birth_date is Feb 29 and target year is not a leap year
+            # In non-leap years, celebrate Feb 29 birthdays on Feb 28
+            return birth_date.replace(year=year, day=28)
+    
+    birthday_this_year = get_birthday_for_year(reference.year)
+    
+    # If birthday already passed this year, get next year's birthday
+    if birthday_this_year < reference:
+        return get_birthday_for_year(reference.year + 1)
     return birthday_this_year
 
 def create_ics_file(birthdays, output_file="birthdays.ics"):
     c = Calendar()
     today = datetime.today()
-    next_year = today + timedelta(days=365)
+    # Calculate exactly one year from today, accounting for leap years
+    next_year_today = datetime(today.year + 1, today.month, today.day)
 
     for name, birthday_str, qq, age_hide in birthdays:
         birth_date = datetime.fromisoformat(birthday_str)
         upcoming = generate_birthday_this_year(birth_date, today)
 
-        if today <= upcoming <= next_year:
+        # Include today but exclude the same date next year
+        if today <= upcoming < next_year_today:
             age = upcoming.year - birth_date.year
             e = Event()
             if not age_hide:
