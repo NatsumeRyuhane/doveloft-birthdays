@@ -2,6 +2,11 @@ import requests
 from ics import Calendar, Event
 from datetime import datetime, timedelta
 import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file (only in local development)
+if os.path.exists('.env'):
+    load_dotenv()
 
 # Set up Notion API
 NOTION_TOKEN = os.getenv("NOTION_TOKEN", "")
@@ -30,10 +35,15 @@ def fetch_birthdays():
         props = item["properties"]
 
         # Extract name
-        name = "(unknown)"
-        if "姓名" in props and props["姓名"]["title"]:
-            name = props["姓名"]["title"][0]["plain_text"]
+        name = ""
+        if "昵称" in props and props["昵称"]["title"]:
+            name = props["昵称"]["title"][0]["plain_text"]
 
+        # if the name cannot be extracted, assume the data is malformed
+        # and jump to the next item
+        if not name:
+            continue
+        
         # Extract birthday date
         birthday_str = props.get("生日", {}).get("date", {}).get("start", "")
         if not birthday_str:
@@ -71,16 +81,16 @@ def create_ics_file(birthdays, output_file="birthdays.ics"):
         if today <= upcoming <= next_year:
             age = upcoming.year - birth_date.year
             e = Event()
-            e.name = f"{name} 的 {age} 岁生日"
-            e.begin = upcoming.strftime("%Y-%m-%d")
+            e.name = f"{name}的{age}岁生日"
+            e.begin = upcoming  # Use datetime object directly
             e.make_all_day()
             if qq:
                 e.description = f"QQ: {qq}"
-                e.extra.append(("COMMENT", f"QQ ID: {qq}"))
+                # Remove the problematic extra.append line
             c.events.add(e)
 
     with open(output_file, "w", encoding="utf-8") as f:
-        f.writelines(c)
+        f.write(c.serialize())  # Use serialize() method instead of str()
     print(f"✅ Generated `{output_file}` with {len(c.events)} upcoming birthday(s)")
 
 if __name__ == "__main__":
