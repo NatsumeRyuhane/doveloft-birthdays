@@ -51,7 +51,11 @@ def fetch_birthdays():
 
         # Extract QQ
         qq = props.get("QQ号码", {}).get("number", "")
-        birthdays.append((name, birthday_str, qq))
+        
+        # Extract age display option
+        age_display = props.get("年龄显示", {}).get("checkbox", True)
+
+        birthdays.append((name, birthday_str, qq, age_display))
 
     return birthdays
 
@@ -74,14 +78,17 @@ def create_ics_file(birthdays, output_file="birthdays.ics"):
     today = datetime.today()
     next_year = today + timedelta(days=365)
 
-    for name, birthday_str, qq in birthdays:
+    for name, birthday_str, qq, age_display in birthdays:
         birth_date = datetime.fromisoformat(birthday_str)
         upcoming = generate_birthday_this_year(birth_date, today)
 
         if today <= upcoming <= next_year:
             age = upcoming.year - birth_date.year
             e = Event()
-            e.name = f"{name}的{age}岁生日"
+            if age_display:
+                e.name = f"{name}的{age}岁生日"
+            else:
+                e.name = f"{name}的生日"
             e.begin = upcoming  # Use datetime object directly
             e.make_all_day()
             if qq:
