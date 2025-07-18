@@ -2,7 +2,7 @@ name: Update Birthday ICS
 
 on:
   schedule:
-    - cron: "0 6 * * *" # every day at 06:00 UTC
+    - cron: "0,30 * * * *"
   workflow_dispatch:
 
 jobs:
