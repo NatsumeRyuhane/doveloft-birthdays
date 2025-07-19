@@ -53,7 +53,7 @@ def fetch_birthdays():
         qq = props.get("QQ号码", {}).get("number", "")
         
         # Extract age display option
-        age_hide = props.get("年龄显示", {}).get("checkbox", False)
+        age_hide = props.get("隐藏年龄", {}).get("checkbox", True)
 
         birthdays.append((name, birthday_str, qq, age_hide))
 
