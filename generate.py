@@ -138,8 +138,8 @@ def create_ics_file(birthdays, output_file="birthdays.ics"):
                 e.name = f"{name}的生日"
             e.begin = birthday_to_use  # Use datetime object directly
             e.make_all_day()
-            if qq:
-                e.description = f"QQ: {qq}"
+            # if qq:
+            #     e.description = f"QQ: {qq}"
             c.events.add(e)
 
     with open(output_file, "w", encoding="utf-8") as f:
